@@ -146,6 +146,10 @@
           packages = [
             # pkgs.ripgrep
             pkgs.rust-analyzer
+            pkgs.hyperfine
+            pkgs.cargo-flamegraph
+            pkgs.samply
+            pkgs.valgrind
           ];
         };
       }

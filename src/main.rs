@@ -1,4 +1,5 @@
 use image::{self, ImageBuffer};
+use rand::prelude::*;
 
 #[derive(PartialEq)]
 struct Point {
@@ -50,42 +51,19 @@ fn main() {
 
     let mut imgbuf = ImageBuffer::new(width, height);
 
-    let a = Point::new(7, 3);
-    let b = Point::new(12, 37);
-    let c = Point::new(62, 53);
+    let mut rng = rand::rng();
 
-    let points = [&a, &b, &c];
+    for _ in 0..1 << 16 {
+        let a = Point::new(rng.random_range(0..64), rng.random_range(0..64));
+        let b = Point::new(rng.random_range(0..64), rng.random_range(0..64));
 
-    let ab = line(&a, &b);
-    let ca = line(&c, &a);
-    let bc = line(&b, &c);
-    let ac = line(&a, &c);
+        let line = line(&a, &b);
+        let color: [u8; 4] = [rand::random(), rand::random(), rand::random(), 255];
 
-    let black: [u8; 4] = [0, 0, 0, 255];
-    let white: [u8; 4] = [255, 255, 255, 255];
-    let red: [u8; 4] = [255, 0, 0, 255];
-    let green: [u8; 4] = [0, 255, 0, 255];
-    let blue: [u8; 4] = [0, 0, 255, 255];
-    let yellow: [u8; 4] = [255, 200, 0, 255];
-
-    for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-        *pixel = image::Rgba(black);
-        let current_point = Point::new(x, y);
-        if ab.contains(&current_point) {
-            *pixel = image::Rgba(red);
-        }
-        if ca.contains(&current_point) {
-            *pixel = image::Rgba(yellow);
-        }
-        if bc.contains(&current_point) {
-            *pixel = image::Rgba(green);
-        }
-        if ac.contains(&current_point) {
-            *pixel = image::Rgba(blue);
-        }
-        for point in points {
-            if current_point == *point {
-                *pixel = image::Rgba(white);
+        for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
+            let current_point = Point::new(x, y);
+            if line.contains(&current_point) {
+                *pixel = image::Rgba(color);
             }
         }
     }

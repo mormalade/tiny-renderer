@@ -1,2 +1,6 @@
 /target
 result*
+callgrind*
+flamegraph.svg
+perf.*
+profile.json.gz
