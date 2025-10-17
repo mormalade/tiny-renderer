@@ -1,4 +1,4 @@
-use image::{self, ImageBuffer};
+use image::{self, ImageBuffer, Rgba};
 use rand::prelude::*;
 
 #[derive(PartialEq)]
@@ -14,10 +14,10 @@ impl Point {
 }
 
 fn line(p1: &Point, p2: &Point) -> Vec<Point> {
-    let dx = p1.x.abs_diff(p2.x);
-    let dy = p1.y.abs_diff(p2.y);
+    let dx = p1.x as i32 - p2.x as i32;
+    let dy = p1.y as i32 - p2.y as i32;
     let mut res: Vec<Point> = vec![];
-    if dx > dy {
+    if dx.abs() > dy.abs() {
         if p1.x > p2.x {
             for x in p2.x..p1.x {
                 let y = p2.y + ((x - p2.x) as f32 * (dy as f32 / dx as f32)) as u32;
@@ -53,18 +53,16 @@ fn main() {
 
     let mut rng = rand::rng();
 
-    for _ in 0..1 << 16 {
-        let a = Point::new(rng.random_range(0..64), rng.random_range(0..64));
-        let b = Point::new(rng.random_range(0..64), rng.random_range(0..64));
+    for _ in 0..1 << 24 {
+        let a = Point::new(rng.random_range(0..width), rng.random_range(0..height));
+        let b = Point::new(rng.random_range(0..width), rng.random_range(0..height));
 
         let line = line(&a, &b);
         let color: [u8; 4] = [rand::random(), rand::random(), rand::random(), 255];
+        let color = Rgba(color);
 
-        for (x, y, pixel) in imgbuf.enumerate_pixels_mut() {
-            let current_point = Point::new(x, y);
-            if line.contains(&current_point) {
-                *pixel = image::Rgba(color);
-            }
+        for point in &line {
+            imgbuf.put_pixel(point.x, point.y, color);
         }
     }
 
