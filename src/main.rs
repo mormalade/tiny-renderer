@@ -18,25 +18,29 @@ fn line(p1: &Point, p2: &Point, imgbuf: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, col
     let dy = p1.y as i32 - p2.y as i32;
     if dx.abs() > dy.abs() {
         if p1.x > p2.x {
+            let mut y = p2.y as f32;
             for x in p2.x..p1.x {
-                let y = p2.y + ((x - p2.x) as f32 * (dy as f32 / dx as f32)) as u32;
-                imgbuf.put_pixel(x, y, *color);
+                y += dy as f32 / dx as f32;
+                imgbuf.put_pixel(x, y as u32, *color);
             }
         } else {
+            let mut y = p1.y as f32;
             for x in p1.x..p2.x {
-                let y = p1.y + ((x - p1.x) as f32 * (dy as f32 / dx as f32)) as u32;
-                imgbuf.put_pixel(x, y, *color);
+                y += dy as f32 / dx as f32;
+                imgbuf.put_pixel(x, y as u32, *color);
             }
         }
     } else if p1.y > p2.y {
+        let mut x = p2.x as f32;
         for y in p2.y..p1.y {
-            let x = p2.x + ((y - p2.y) as f32 * (dx as f32 / dy as f32)) as u32;
-            imgbuf.put_pixel(x, y, *color);
+            x += dx as f32 / dy as f32;
+            imgbuf.put_pixel(x as u32, y, *color);
         }
     } else {
+        let mut x = p1.x as f32;
         for y in p1.y..p2.y {
-            let x = p1.x + ((y - p1.y) as f32 * (dx as f32 / dy as f32)) as u32;
-            imgbuf.put_pixel(x, y, *color);
+            x += dx as f32 / dy as f32;
+            imgbuf.put_pixel(x as u32, y, *color);
         }
     }
 }
