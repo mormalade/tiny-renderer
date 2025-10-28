@@ -1,67 +1,103 @@
-use image::{self, ImageBuffer, Rgba};
-use rand::prelude::*;
+mod draw;
 
-#[derive(PartialEq)]
-struct Point {
-    x: u32,
-    y: u32,
+use draw::Canvas;
+use std::{fs::File, io::Read};
+
+#[derive(Debug)]
+struct Vertex {
+    x: f32,
+    y: f32,
+    z: f32,
 }
 
-impl Point {
-    fn new(x: u32, y: u32) -> Self {
-        Self { x, y }
+impl Vertex {
+    fn new(x: f32, y: f32, z: f32) -> Self {
+        Self { x, y, z }
     }
 }
 
-fn line(p1: &Point, p2: &Point, imgbuf: &mut ImageBuffer<Rgba<u8>, Vec<u8>>, color: &Rgba<u8>) {
-    let dx = p1.x as i32 - p2.x as i32;
-    let dy = p1.y as i32 - p2.y as i32;
-    if dx.abs() > dy.abs() {
-        if p1.x > p2.x {
-            let mut y = p2.y as f32;
-            for x in p2.x..p1.x {
-                y += dy as f32 / dx as f32;
-                imgbuf.put_pixel(x, y as u32, *color);
-            }
-        } else {
-            let mut y = p1.y as f32;
-            for x in p1.x..p2.x {
-                y += dy as f32 / dx as f32;
-                imgbuf.put_pixel(x, y as u32, *color);
-            }
-        }
-    } else if p1.y > p2.y {
-        let mut x = p2.x as f32;
-        for y in p2.y..p1.y {
-            x += dx as f32 / dy as f32;
-            imgbuf.put_pixel(x as u32, y, *color);
-        }
-    } else {
-        let mut x = p1.x as f32;
-        for y in p1.y..p2.y {
-            x += dx as f32 / dy as f32;
-            imgbuf.put_pixel(x as u32, y, *color);
+#[derive(Debug)]
+struct Triangle {
+    a: usize,
+    b: usize,
+    c: usize,
+}
+
+impl Triangle {
+    fn new(a: usize, b: usize, c: usize) -> Self {
+        Self {
+            a: a - 1,
+            b: b - 1,
+            c: c - 1,
         }
     }
 }
 
 fn main() {
-    // draw lines
-    let width = 64;
-    let height = 64;
+    let mut model = File::open("src/diablo3_pose.obj").expect("file should be there");
+    let mut buf = String::new();
+    _ = model.read_to_string(&mut buf).unwrap();
 
-    let mut imgbuf = ImageBuffer::new(width, height);
+    let mut vertices: Vec<Vertex> = Vec::new();
+    let mut triangles: Vec<Triangle> = Vec::new();
+    // make a hashmap??
+    for line in buf.lines() {
+        let mut line = line.split_whitespace();
+        let data_type = match line.next() {
+            Some(data) => data,
+            None => continue,
+        };
+        match data_type {
+            "v" => {
+                let x: f32 = line.next().unwrap().parse().unwrap();
+                let y: f32 = line.next().unwrap().parse().unwrap();
+                let z: f32 = line.next().unwrap().parse().unwrap();
+                let vertex = Vertex::new(x, y, z);
+                vertices.push(vertex);
+            }
+            "f" => {
+                // divide by / and then push to faces
+                let a: usize = line
+                    .next()
+                    .unwrap()
+                    .split('/')
+                    .next()
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                let b: usize = line
+                    .next()
+                    .unwrap()
+                    .split('/')
+                    .next()
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                let c: usize = line
+                    .next()
+                    .unwrap()
+                    .split('/')
+                    .next()
+                    .unwrap()
+                    .parse()
+                    .unwrap();
+                let triangle = Triangle::new(a, b, c);
+                triangles.push(triangle);
+            }
+            _ => (),
+        }
+    }
+    // draw points
+    let mut canvas = Canvas::new(1024, 1024);
+    canvas.set_color(255, 0, 0);
 
-    let mut rng = rand::rng();
-
-    for _ in 0..1 << 24 {
-        let a = Point::new(rng.random_range(0..width), rng.random_range(0..height));
-        let b = Point::new(rng.random_range(0..width), rng.random_range(0..height));
-
-        let color: [u8; 4] = [rand::random(), rand::random(), rand::random(), 255];
-        let color = Rgba(color);
-        line(&a, &b, &mut imgbuf, &color);
+    for vertex in vertices {
+        // -1.0 to 1.0 converted into 0 to 64
+        // (0 to 2) / 2 is the same
+        let x = ((vertex.x + 1.) * (canvas.width - 1) as f32 / 2.) as u32;
+        let y = ((vertex.y + 1.) * (canvas.height - 1) as f32 / 2.) as u32;
+        canvas.put_pixel(x, canvas.height - 1 - y);
     }
 
-    imgbuf.save("lines.tga").unwrap();
+    canvas.save("diablo.tga");
 }
