@@ -1,5 +1,4 @@
 use image::{self, ImageBuffer, Rgba};
-use rand::prelude::*;
 
 #[derive(Debug, PartialEq)]
 pub struct Point {
@@ -10,6 +9,23 @@ pub struct Point {
 impl Point {
     pub fn new(x: u32, y: u32) -> Self {
         Self { x, y }
+    }
+}
+
+#[derive(Debug)]
+pub struct Triangle<T> {
+    pub a: T,
+    pub b: T,
+    pub c: T,
+}
+
+pub trait New<T> {
+    fn new(a: T, b: T, c: T) -> Self;
+}
+
+impl New<Point> for Triangle<Point> {
+    fn new(a: Point, b: Point, c: Point) -> Self {
+        Self { a, b, c }
     }
 }
 
@@ -43,45 +59,49 @@ impl Canvas {
     }
 
     pub fn put_pixel(&mut self, x: u32, y: u32) {
+        let y = self.height - 1 - y; //flip on y axis
         self.imgbuf.put_pixel(x, y, self.color);
     }
 
     pub fn save(&self, file: &str) {
         self.imgbuf.save(file).unwrap();
     }
+
     pub fn line(&mut self, p1: &Point, p2: &Point) {
         let dx = p1.x as i32 - p2.x as i32;
         let dy = p1.y as i32 - p2.y as i32;
         if dx.abs() > dy.abs() {
             if p1.x > p2.x {
                 let mut y = p2.y as f32;
-                for x in p2.x..p1.x {
+                for x in p2.x..=p1.x {
+                    self.put_pixel(x, (y + 0.5) as u32);
                     y += dy as f32 / dx as f32;
-                    self.imgbuf
-                        .put_pixel(x, self.height - 1 - y as u32, self.color);
                 }
             } else {
                 let mut y = p1.y as f32;
-                for x in p1.x..p2.x {
+                for x in p1.x..=p2.x {
+                    self.put_pixel(x, (y + 0.5) as u32);
                     y += dy as f32 / dx as f32;
-                    self.imgbuf
-                        .put_pixel(x, self.height - 1 - y as u32, self.color);
                 }
             }
         } else if p1.y > p2.y {
             let mut x = p2.x as f32;
-            for y in p2.y..p1.y {
+            for y in p2.y..=p1.y {
+                self.put_pixel((x + 0.5) as u32, y);
                 x += dx as f32 / dy as f32;
-                self.imgbuf
-                    .put_pixel(x as u32, self.height - 1 - y, self.color);
             }
         } else {
             let mut x = p1.x as f32;
-            for y in p1.y..p2.y {
+            for y in p1.y..=p2.y {
+                self.put_pixel((x + 0.5) as u32, y);
                 x += dx as f32 / dy as f32;
-                self.imgbuf
-                    .put_pixel(x as u32, self.height - 1 - y, self.color);
             }
         }
+    }
+
+    pub fn triangle(&mut self, t: Triangle<Point>) {
+        self.line(&t.a, &t.b);
+        self.line(&t.b, &t.c);
+        self.line(&t.a, &t.c);
     }
 }

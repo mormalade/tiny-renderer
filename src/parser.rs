@@ -1,14 +1,7 @@
-use crate::draw::{Canvas, Point};
+use crate::draw::{Canvas, New, Point, Triangle};
 use std::{fs::File, io::Read};
 
-#[derive(Debug)]
-pub struct Triangle {
-    pub a: usize,
-    pub b: usize,
-    pub c: usize,
-}
-
-impl Triangle {
+impl New<usize> for Triangle<usize> {
     fn new(a: usize, b: usize, c: usize) -> Self {
         Self {
             a: a - 1,
@@ -18,13 +11,13 @@ impl Triangle {
     }
 }
 
-pub fn parse_obj(file: &str, canvas: &Canvas) -> (Vec<Point>, Vec<Triangle>) {
+pub fn parse_obj(file: &str, canvas: &Canvas) -> (Vec<Point>, Vec<Triangle<usize>>) {
     let mut model = File::open(file).expect("file should be there");
     let mut buf = String::new();
     _ = model.read_to_string(&mut buf).unwrap();
 
     let mut vertices: Vec<Point> = Vec::new();
-    let mut triangles: Vec<Triangle> = Vec::new();
+    let mut triangles: Vec<Triangle<usize>> = Vec::new();
 
     for line in buf.lines() {
         let mut line = line.split_whitespace();
