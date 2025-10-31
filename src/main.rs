@@ -21,7 +21,7 @@ fn main() {
     canvas.triangle(t2);
 
     canvas.set_color(0, 255, 0);
-    canvas.triangle(t3);
+    // canvas.triangle(t3);
 
     canvas.save("triangles.tga");
 }

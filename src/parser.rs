@@ -11,12 +11,12 @@ impl New<usize> for Triangle<usize> {
     }
 }
 
-pub fn parse_obj(file: &str, canvas: &Canvas) -> (Vec<Point>, Vec<Triangle<usize>>) {
+pub fn parse_obj(file: &str, canvas: &Canvas) -> (Vec<Point<u32>>, Vec<Triangle<usize>>) {
     let mut model = File::open(file).expect("file should be there");
     let mut buf = String::new();
     _ = model.read_to_string(&mut buf).unwrap();
 
-    let mut vertices: Vec<Point> = Vec::new();
+    let mut vertices: Vec<Point<u32>> = Vec::new();
     let mut triangles: Vec<Triangle<usize>> = Vec::new();
 
     for line in buf.lines() {

@@ -1,13 +1,15 @@
+use std::mem::swap;
+
 use image::{self, ImageBuffer, Rgba};
 
 #[derive(Debug, PartialEq)]
-pub struct Point {
-    pub x: u32,
-    pub y: u32,
+pub struct Point<T> {
+    pub x: T,
+    pub y: T,
 }
 
-impl Point {
-    pub fn new(x: u32, y: u32) -> Self {
+impl<T> Point<T> {
+    pub fn new(x: T, y: T) -> Point<T> {
         Self { x, y }
     }
 }
@@ -23,8 +25,8 @@ pub trait New<T> {
     fn new(a: T, b: T, c: T) -> Self;
 }
 
-impl New<Point> for Triangle<Point> {
-    fn new(a: Point, b: Point, c: Point) -> Self {
+impl New<Point<u32>> for Triangle<Point<u32>> {
+    fn new(a: Point<u32>, b: Point<u32>, c: Point<u32>) -> Self {
         Self { a, b, c }
     }
 }
@@ -67,7 +69,7 @@ impl Canvas {
         self.imgbuf.save(file).unwrap();
     }
 
-    pub fn line(&mut self, p1: &Point, p2: &Point) {
+    pub fn line(&mut self, p1: &Point<u32>, p2: &Point<u32>) {
         let dx = p1.x as i32 - p2.x as i32;
         let dy = p1.y as i32 - p2.y as i32;
         if dx.abs() > dy.abs() {
@@ -99,9 +101,41 @@ impl Canvas {
         }
     }
 
-    pub fn triangle(&mut self, t: Triangle<Point>) {
-        self.line(&t.a, &t.b);
-        self.line(&t.b, &t.c);
-        self.line(&t.a, &t.c);
+    pub fn triangle(&mut self, mut t: Triangle<Point<u32>>) {
+        if t.a.y > t.b.y {
+            swap(&mut t.a, &mut t.b);
+        }
+        if t.a.y > t.c.y {
+            swap(&mut t.a, &mut t.c);
+        }
+        if t.b.y > t.c.y {
+            swap(&mut t.b, &mut t.c);
+        }
+
+        // ab and ac
+        let dx1 = t.c.x as i32 - t.a.x as i32;
+        let dy1 = t.c.y - t.a.y;
+        let dx2 = t.c.x as i32 - t.b.x as i32;
+        let dy2 = dy1;
+        let dx3 = t.b.x as i32 - t.c.x as i32;
+        let dy3 = t.c.y - (t.b.y - t.a.y);
+        let mut x1 = t.a.x as f32;
+        let mut x2 = t.a.x as f32;
+        let mut x3 = t.a.x as f32;
+        for y in t.a.y..=t.b.y {
+            self.put_pixel((x1 + 0.5) as u32, y);
+            self.put_pixel((x2 + 0.5) as u32, y);
+            x1 += dx1 as f32 / dy1 as f32;
+            x2 += dx2.abs() as f32 / dy2 as f32;
+        }
+        // for y in t.b.y..=t.c.y {
+        //     // draw other side
+        //     self.put_pixel((x1 + 0.5) as u32, y);
+        //     self.put_pixel((x3 + 0.5) as u32, y);
+        //     x1 += dx1 as f32 / dy1 as f32;
+        //     x3 += dx3 as f32 / dy3 as f32;
+        // }
+
+        println!("a={:?}, b={:?}, c={:?}", t.a, t.b, t.c);
     }
 }
